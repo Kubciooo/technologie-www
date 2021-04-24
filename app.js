@@ -1,19 +1,28 @@
 const canvas = document.getElementById("canvas");
-const img = document.querySelector("img");
+const restartBtn = document.querySelector(".btn-restart");
+window.addEventListener("resize", resizeCanvas, false);
 
-
-window.addEventListener('resize', resizeCanvas, false);
-
-resizeCanvas();    /// call the first time page is loaded
+resizeCanvas(); /// call the first time page is loaded
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth * 0.8;
+  canvas.height = window.innerHeight * 0.8;
 }
 ctx = canvas.getContext("2d");
 
 class Box {
-  constructor(row, col, rowWidth, colWidth, imgWidth, imgHeight, ctx, isRedRectangle = false) {
+  constructor(
+    img,
+    row,
+    col,
+    rowWidth,
+    colWidth,
+    imgWidth,
+    imgHeight,
+    ctx,
+    isRedRectangle = false
+  ) {
+    this.img = img;
     this.row = row;
     this.col = col;
     this.rowWidth = rowWidth;
@@ -66,7 +75,7 @@ class Box {
       return;
     }
     this.ctx.drawImage(
-      img,
+      this.img,
       this.imgRowSpan[0],
       this.imgColSpan[0],
       this.imgWidth,
@@ -90,31 +99,73 @@ class Box {
 }
 
 class Game {
-  constructor(canvas) {
-    this.ctx = canvas.getContext("2d");
-    this.colCount = 2;
-    this.rowCount = 2;
-    this.maxWidth = canvas.width;
-    this.maxHeight = canvas.height;
-    this.currentX = 0;
+  asyncImageLoader(url) {
+    return new Promise((resolve, reject) => {
+      var image = new Image();
+      image.src = url;
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("could not load image"));
+    });
+  }
+
+
+  async restartGame(src, rows, cols){ 
+    this.rowCount = rows; 
+    this.colCount = cols; 
+    this.currentX = 0; 
     this.currentY = 0;
+     this.img = await this.asyncImageLoader(src); 
+     this.ctx.drawImage(
+      this.img,
+      0,
+      0,
+      this.img.width,
+      this.img.height,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
     this.boxes = [];
     for (let i = 0; i < this.rowCount; i++) {
       this.boxes.push([]);
       for (let j = 0; j < this.colCount; j++) {
         this.boxes[i].push(
           new Box(
+            this.img,
             i,
             j,
-            this.maxWidth / this.rowCount,
-            this.maxHeight / this.colCount,
-            img.width / this.rowCount,
-            img.height / this.colCount,
+            canvas.width / this.rowCount,
+            canvas.height / this.colCount,
+            this.img.width / this.rowCount,
+            this.img.height / this.colCount,
             this.ctx
           )
         );
       }
     }
+    this.shuffle();
+    this.play(-1, -1);
+  }
+
+  resize() {
+    this.maxWidth = canvas.width;
+    this.maxHeight = canvas.height;
+    for (let i = 0; i < this.rowCount; i++) {
+      for (let j = 0; j < this.colCount; j++) {
+        this.boxes[i][j].rowWidth = canvas.width / this.rowCount; 
+        this.boxes[i][j].colWidth = canvas.height / this.colCount; 
+      }
+    }
+    this.play(-1, -1);
+  }
+
+  constructor(canvas, source) {
+    this.ctx = canvas.getContext("2d");
+    this.currentX = 0;
+    this.currentY = 0;
+    this.restartGame(source,4,4);
   }
 
   shuffle() {
@@ -156,12 +207,25 @@ class Game {
     }
   }
 }
+const game = new Game(canvas, "img/img2.jpg");
+canvas.addEventListener("mousemove", event =>  game.play(event.offsetX, event.offsetY));
+canvas.addEventListener("click", event => game.click(event.offsetX, event.offsetY));
+canvas.addEventListener("mouseout", () => game.play(-1,-1));
 
-const game = new Game(canvas);
-img.onload = function () {
-  ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
-  game.shuffle();
+const restartGame = (source, cols, rows) => {
+  game.restartGame(source, cols, rows);
 };
 
-canvas.addEventListener("mousemove", (e) => game.play(e.offsetX, e.offsetY));
-canvas.addEventListener("click", (e) => game.click(e.offsetX, e.offsetY));
+
+window.addEventListener("resize", () => {
+  game.resize(); 
+}, false);
+
+
+let counter = 0;
+
+restartBtn.addEventListener("click", () => {
+  restartGame(`img/img${counter + 1}.jpg`, counter+3,counter+3);
+  counter++;
+  counter %= 2;
+});
