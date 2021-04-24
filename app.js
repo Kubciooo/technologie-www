@@ -1,6 +1,15 @@
 const canvas = document.getElementById("canvas");
 const img = document.querySelector("img");
 
+
+window.addEventListener('resize', resizeCanvas, false);
+
+resizeCanvas();    /// call the first time page is loaded
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
 ctx = canvas.getContext("2d");
 
 class Box {
@@ -83,8 +92,8 @@ class Box {
 class Game {
   constructor(canvas) {
     this.ctx = canvas.getContext("2d");
-    this.colCount = 4;
-    this.rowCount = 4;
+    this.colCount = 2;
+    this.rowCount = 2;
     this.maxWidth = canvas.width;
     this.maxHeight = canvas.height;
     this.currentX = 0;
@@ -99,7 +108,7 @@ class Game {
             j,
             this.maxWidth / this.rowCount,
             this.maxHeight / this.colCount,
-            img.width / this.rowCount, 
+            img.width / this.rowCount,
             img.height / this.colCount,
             this.ctx
           )
@@ -153,8 +162,6 @@ img.onload = function () {
   ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
   game.shuffle();
 };
-
-
 
 canvas.addEventListener("mousemove", (e) => game.play(e.offsetX, e.offsetY));
 canvas.addEventListener("click", (e) => game.click(e.offsetX, e.offsetY));
