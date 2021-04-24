@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
     <title>Lab3 Paweł Kubala</title>
+    <script src="app.js" defer></script>
   </head>
   <body>
     <img src="img/img2.jpg" alt="first image" class="img active" />
@@ -13,8 +14,22 @@
 
     <div class="canvas-container">
       <canvas id="canvas"></canvas>
-      <button class="btn-restart">Restart game</button>
+      <form>
+        <label for="rowInput">Liczba wierszy:</label>
+        <input type="number" id="rowInput" name="rowInput" min="1">
+        <label for="colInput">Liczba kolumn:</label>
+        <input type="number" id="colInput" name="colInput" min="1">
+      </form>
+      <button class="btn-restart">Zresetuj grę</button>
     </div>
-    <script src="app.js" defer></script>
+    <div class="toggle-menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+      <div class="images-container disabled">
+
+      </div>
+    
   </body>
 </html>

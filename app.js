@@ -1,12 +1,18 @@
 const canvas = document.getElementById("canvas");
 const restartBtn = document.querySelector(".btn-restart");
+const rowsCounter = document.querySelector("#rowInput");
+const colsCounter = document.querySelector("#colInput");
+const menu = document.querySelector(".toggle-menu");
+const gallery = document.querySelector(".images-container");
+const gameContainer = document.querySelector(".canvas-container");
+
 window.addEventListener("resize", resizeCanvas, false);
 
-resizeCanvas(); /// call the first time page is loaded
+resizeCanvas();
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth * 0.8;
-  canvas.height = window.innerHeight * 0.8;
+  canvas.width = window.innerWidth * 0.85;
+  canvas.height = window.innerHeight * 0.75;
 }
 ctx = canvas.getContext("2d");
 
@@ -108,14 +114,13 @@ class Game {
     });
   }
 
-
-  async restartGame(src, rows, cols){ 
-    this.rowCount = rows; 
-    this.colCount = cols; 
-    this.currentX = 0; 
+  async restartGame(src, rows, cols) {
+    this.rowCount = rows;
+    this.colCount = cols;
+    this.currentX = 0;
     this.currentY = 0;
-     this.img = await this.asyncImageLoader(src); 
-     this.ctx.drawImage(
+    this.img = await this.asyncImageLoader(src);
+    this.ctx.drawImage(
       this.img,
       0,
       0,
@@ -154,8 +159,8 @@ class Game {
     this.maxHeight = canvas.height;
     for (let i = 0; i < this.rowCount; i++) {
       for (let j = 0; j < this.colCount; j++) {
-        this.boxes[i][j].rowWidth = canvas.width / this.rowCount; 
-        this.boxes[i][j].colWidth = canvas.height / this.colCount; 
+        this.boxes[i][j].rowWidth = canvas.width / this.rowCount;
+        this.boxes[i][j].colWidth = canvas.height / this.colCount;
       }
     }
     this.play(-1, -1);
@@ -165,9 +170,10 @@ class Game {
     this.ctx = canvas.getContext("2d");
     this.currentX = 0;
     this.currentY = 0;
-    this.restartGame(source,4,4);
+    this.restartGame(source, 4, 4);
   }
 
+  // shuffle the boxes
   shuffle() {
     this.boxes = this.boxes.sort(() => Math.random() - 0.5);
     for (let i = 0; i < this.rowCount; i++) {
@@ -181,6 +187,7 @@ class Game {
     this.boxes[0][0].isRedRectangle = true;
   }
 
+  // hover an item
   play(x, y) {
     for (let i = 0; i < this.rowCount; i++) {
       for (let j = 0; j < this.colCount; j++) {
@@ -188,6 +195,20 @@ class Game {
       }
     }
   }
+
+  //check win condition
+  checkWinCondition() {
+    for (let i = 0; i < this.rowCount; i++) {
+      for (let j = 0; j < this.colCount; j++) {
+        const box = this.boxes[i][j];
+        if (box.row !== box.imgRow || box.col !== box.imgCol) return false;
+      }
+    }
+    this.restartGame(this.img.src, this.rowCount, this.colCount);  
+    return true;
+  }
+
+  // click hovered box
   click(x, y) {
     for (let i = 0; i < this.rowCount; i++) {
       for (let j = 0; j < this.colCount; j++) {
@@ -201,31 +222,58 @@ class Game {
           this.currentX = i;
           this.currentY = j;
           this.play(x, y);
+          this.checkWinCondition();
           return;
         }
       }
     }
   }
 }
+
+let currentImageSource = "img/img2.jpg";
+
 const game = new Game(canvas, "img/img2.jpg");
-canvas.addEventListener("mousemove", event =>  game.play(event.offsetX, event.offsetY));
-canvas.addEventListener("click", event => game.click(event.offsetX, event.offsetY));
-canvas.addEventListener("mouseout", () => game.play(-1,-1));
+rowsCounter.value = 4;
+colsCounter.value = 4;
+canvas.addEventListener("mousemove", (event) =>
+  game.play(event.offsetX, event.offsetY)
+);
+canvas.addEventListener("click", (event) =>
+  game.click(event.offsetX, event.offsetY)
+);
+canvas.addEventListener("mouseout", () => game.play(-1, -1));
 
 const restartGame = (source, cols, rows) => {
   game.restartGame(source, cols, rows);
 };
 
-
-window.addEventListener("resize", () => {
-  game.resize(); 
-}, false);
-
-
-let counter = 0;
+window.addEventListener(
+  "resize",
+  () => {
+    game.resize();
+  },
+  false
+);
 
 restartBtn.addEventListener("click", () => {
-  restartGame(`img/img${counter + 1}.jpg`, counter+3,counter+3);
-  counter++;
-  counter %= 2;
+  restartGame(currentImageSource, rowsCounter.value, colsCounter.value);
 });
+
+toggleGalleryList = () => {
+  gallery.classList.toggle("disabled");
+  gameContainer.classList.toggle("disabled");
+};
+
+menu.addEventListener("click", toggleGalleryList);
+
+for (let i = 1; i <= 19; i++) {
+  const img = document.createElement("img");
+  img.src = `img/gallery/${i}.jpg`;
+  img.classList.add("gallery__img");
+  gallery.appendChild(img);
+  img.addEventListener("click", () => {
+    currentImageSource = img.src;
+    restartGame(img.src, rowsCounter.value, colsCounter.value);
+    toggleGalleryList();
+  });
+}
